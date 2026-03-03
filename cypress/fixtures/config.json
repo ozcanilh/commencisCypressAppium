@@ -1,0 +1,5 @@
+{
+  "techcrunchUrl": "https://techcrunch.com/",
+  "explicitWaitTimeout": 15000,
+  "pageLoadTimeout": 30000
+}

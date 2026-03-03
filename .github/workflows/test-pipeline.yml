@@ -1,0 +1,105 @@
+name: Test Automation Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Test suite to run (web | mobile | all)'
+        required: false
+        default: 'web'
+      browser:
+        description: 'Browser (chrome | firefox | edge)'
+        required: false
+        default: 'chrome'
+
+jobs:
+  web-tests:
+    name: Web Tests – ${{ github.event.inputs.browser || 'chrome' }}
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.suite != 'mobile' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run web tests
+        run: npx cypress run --browser ${{ github.event.inputs.browser || 'chrome' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_ENABLED: ${{ secrets.SLACK_ENABLED || 'false' }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL || '#test-results' }}
+
+      - name: Upload Mochawesome report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report-web
+          path: cypress/reports/
+          retention-days: 7
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/reports/screenshots/
+          retention-days: 7
+
+  mobile-tests:
+    name: Mobile Tests – Android
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.suite == 'mobile' || github.event.inputs.suite == 'all' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Android Emulator & Run mobile tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            adb wait-for-device
+            adb install ${{ secrets.APK_PATH || 'hepsiburada.apk' }}
+            npx appium &
+            sleep 5
+            npm run mobile:run
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_ENABLED: ${{ secrets.SLACK_ENABLED || 'false' }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL || '#test-results' }}
+          DEVICE_NAME: ${{ secrets.DEVICE_NAME || 'Android Emulator' }}
+          PLATFORM_VERSION: ${{ secrets.PLATFORM_VERSION || '13' }}
+
+      - name: Upload Mochawesome mobile report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report-mobile
+          path: mobile/reports/
+          retention-days: 7
