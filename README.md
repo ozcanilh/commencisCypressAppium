@@ -160,7 +160,7 @@ This script automatically:
 Example with custom APK path:
 
 ```bash
-APP_PATH="/Users/ozcanilhan/Downloads/hepsiburada-64.apk" npm run test:mobile
+APP_PATH="/Users/<your-user>/Downloads/hepsiburada-64.apk" npm run test:mobile
 ```
 
 ### All Tests
