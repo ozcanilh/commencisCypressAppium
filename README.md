@@ -1,30 +1,114 @@
 # commencis-cypress-automation
 
-JavaScript test automation project covering three assignments:
+## Live Coding — API & Mobile Test Automation
 
-- **Case 1** – Contact form test cases (TestRail format)
-- **Case 2** – Web automation for TechCrunch (Cypress + Mochawesome)
-- **Case 3** – Mobile automation for Hepsiburada (WebdriverIO + Appium + Mochawesome)
+### Prerequisites
 
----
+- Node.js (v18+)
+- Android Emulator or physical device (connected via ADB)
+- Appium (`npm install -g appium`)
+- UiAutomator2 driver (`appium driver install uiautomator2`)
+- SauceLabs Demo APK (`mda-androidTest-2.2.0-25.apk`)
 
-## Prerequisites
+### Setup
 
-| Tool                       | Version | Notes                            |
-| -------------------------- | ------- | -------------------------------- |
-| Node.js                    | 20+     | `node -v`                        |
-| npm                        | 9+      | `npm -v`                         |
-| Chrome                     | Latest  | For web tests                    |
-| Firefox                    | Latest  | For web tests (multi-browser)    |
-| Appium                     | 2.x     | `appium -v` — for mobile tests   |
-| Appium UIAutomator2 driver | Latest  | `appium driver list --installed` |
-| Android SDK / ADB          | API 33+ | `adb --version`                  |
-| Android Emulator           | API 33+ | Running before mobile tests      |
-| Hepsiburada APK            | 5.85.x  | Installed on emulator            |
+```bash
+npm install
+```
 
----
+### Scenario 1 — API: Contact List User CRUD
 
-## Project Structure
+**API Docs:** https://documenter.getpostman.com/view/4012288/TzK2bEa8
+
+**Test file:** `cypress/e2e/tests/2_api/contact-list-users.cy.js`
+
+| Step | Endpoint | Validation |
+|------|----------|------------|
+| Add user | `POST /users` | 201, firstName/lastName/email match |
+| Get user | `GET /users/me` | 200, created data matches |
+| Update user | `PATCH /users/me` | 200, random firstName/lastName applied |
+| Verify update | `GET /users/me` | 200, updated values match |
+| Delete user | `DELETE /users/me` | 200 |
+| Verify delete | `GET /users/me` | 401 |
+
+**Run:**
+
+```bash
+npm run test:api
+```
+
+**Report:** `cypress/reports/mocha/` (HTML)
+
+### Scenario 2 — Mobile: SauceLabs Demo App
+
+**App:** https://github.com/saucelabs/my-demo-app-android
+
+**Test file:** `mobile/tests/saucelabs-demo.test.js`
+
+**Run:**
+
+1. Start Appium:
+
+```bash
+npx appium
+```
+
+2. Run the test:
+
+```bash
+APP_PATH=<path-to-apk> npm run mobile:saucelabs
+```
+
+Example:
+
+```bash
+APP_PATH=~/Desktop/mda-androidTest-2.2.0-25.apk npm run mobile:saucelabs
+```
+
+**Report:** `mobile/reports/` (HTML)
+
+### Live Coding Project Structure
+
+```
+cypress/
+  e2e/tests/2_api/
+    contact-list-users.cy.js      # API test
+  support/commands/
+    api_commands.js               # cy.apiGet, cy.apiPost, cy.apiPut, cy.apiDelete
+mobile/
+  config/
+    wdio.saucelabs.config.js      # WDIO config for SauceLabs demo app
+  pages/
+    MobileBasePage.js             # Base class (waitForVisible, click, isDisplayed)
+    saucelabs/
+      SauceLabsBasePage.js        # App-specific base (APP_ID, this.id())
+      CatalogPage.js              # Catalog locators & actions
+      ProductDetailPage.js        # Detail page verification
+      SidebarPage.js              # Sidebar menu navigation
+      WebViewPage.js              # WebView URL input & context switch
+      DrawingPage.js              # Drawing canvas & touch actions
+  tests/
+    saucelabs-demo.test.js        # Mobile test
+```
+
+---------------------------------------------------------
+
+## Web & Mobile Automation (Existing)
+
+### Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Node.js | 20+ | `node -v` |
+| npm | 9+ | `npm -v` |
+| Chrome | Latest | For web tests |
+| Appium | 2.x | `appium -v` |
+| UiAutomator2 driver | Latest | `appium driver list --installed` |
+| Android SDK / ADB | API 33+ | `adb --version` |
+| Android Emulator | API 33+ | Running before mobile tests |
+| Hepsiburada APK | 5.85.x | 64-bit variant from [apkpure.com](https://apkpure.com/hepsiburada-online-shopping/com.pozitron.hepsiburada/download) |
+
+### Full Project Structure
 
 ```
 commencis-cypress-automation/
@@ -32,6 +116,10 @@ commencis-cypress-automation/
 ├── cypress.config.js                # Cypress configuration + Mochawesome reporter
 ├── package.json
 ├── .gitignore
+├── .prettierrc
+├── .prettierignore
+├── .husky/pre-commit
+├── LIVECODING.md
 ├── .github/workflows/
 │   └── test-pipeline.yml            # GitHub Actions CI/CD pipeline
 ├── cypress/
@@ -41,202 +129,113 @@ commencis-cypress-automation/
 │   │   │       ├── homePage.js
 │   │   │       └── articlePage.js
 │   │   └── tests/
-│   │       └── 1_techcrunch/
-│   │           └── techcrunch.cy.js # Case 2: TechCrunch web tests
+│   │       ├── 1_techcrunch/
+│   │       │   └── techcrunch.cy.js
+│   │       └── 2_api/
+│   │           ├── api-example.cy.js
+│   │           └── contact-list-users.cy.js
 │   ├── support/
 │   │   ├── e2e.js
 │   │   └── commands/
 │   │       ├── general_commands.js
-│   │       └── techcrunch_commands.js
-│   ├── fixtures/
-│   │   └── config.json
+│   │       ├── techcrunch_commands.js
+│   │       └── api_commands.js
 │   ├── utils/
-│   │   └── SlackNotifier.js         # Slack webhook notifications (web)
-│   └── reports/                     # Generated Mochawesome reports (gitignored)
-└── mobile/
-    ├── tests/
-    │   └── hepsiburada.test.js      # Case 3: Hepsiburada mobile tests
-    ├── pages/
-    │   ├── MobileBasePage.js
-    │   └── hepsiburada/
-    │       ├── MainPage.js
-    │       ├── SearchResultsPage.js
-    │       └── CartPage.js
-    ├── config/
-    │   └── wdio.config.js           # WebdriverIO + Appium configuration
-    ├── utils/
-    │   └── SlackNotifier.js         # Slack webhook notifications (mobile)
-    └── reports/                     # Generated Mochawesome reports (gitignored)
+│   │   └── SlackNotifier.js
+│   └── reports/                     # Generated reports (gitignored)
+├── mobile/
+│   ├── tests/
+│   │   ├── hepsiburada.test.js
+│   │   └── saucelabs-demo.test.js
+│   ├── pages/
+│   │   ├── MobileBasePage.js
+│   │   ├── hepsiburada/
+│   │   │   ├── MainPage.js
+│   │   │   ├── SearchResultsPage.js
+│   │   │   └── CartPage.js
+│   │   └── saucelabs/
+│   │       ├── SauceLabsBasePage.js
+│   │       ├── CatalogPage.js
+│   │       ├── ProductDetailPage.js
+│   │       ├── SidebarPage.js
+│   │       ├── WebViewPage.js
+│   │       └── DrawingPage.js
+│   ├── config/
+│   │   ├── wdio.config.js
+│   │   └── wdio.saucelabs.config.js
+│   ├── utils/
+│   │   └── SlackNotifier.js
+│   └── reports/                     # Generated reports (gitignored)
+└── scripts/
+    └── run-mobile.js                # Automated Appium setup + Hepsiburada test runner
 ```
 
----
-
-## Installation
+### Running Tests
 
 ```bash
-npm install
-```
+# API tests
+npm run test:api
 
-After installation, enable git hooks:
-
-```bash
-npm run prepare
-```
-
----
-
-## Configuration
-
-### Web (Cypress)
-
-Edit `cypress.config.js` or override via environment variables:
-
-```js
-baseUrl: 'https://techcrunch.com',
-defaultCommandTimeout: 15000,
-pageLoadTimeout: 30000,
-```
-
-### Mobile (WebdriverIO + Appium)
-
-Edit `mobile/config/wdio.config.js` or override via environment variables:
-
-| Variable           | Default                                     | Description                |
-| ------------------ | ------------------------------------------- | -------------------------- |
-| `APPIUM_HOST`      | `127.0.0.1`                                 | Appium server host         |
-| `APPIUM_PORT`      | `4723`                                      | Appium server port         |
-| `APP_PATH`         | `./apk/hepsiburada.apk`                     | Local APK path for install |
-| `DEVICE_NAME`      | `Android Emulator`                          | Target device or AVD name  |
-| `PLATFORM_VERSION` | `15`                                        | Android OS version         |
-| `APP_PACKAGE`      | `com.pozitron.hepsiburada`                  | App package name           |
-| `APP_ACTIVITY`     | `com.hepsiburada.ui.startup.SplashActivity` | App launch activity        |
-
-### Slack (optional)
-
-| Variable            | Description                            |
-| ------------------- | -------------------------------------- |
-| `SLACK_WEBHOOK_URL` | Incoming webhook URL                   |
-| `SLACK_ENABLED`     | `true` to enable notifications         |
-| `SLACK_CHANNEL`     | Target channel (e.g., `#test-results`) |
-
----
-
-## Running Tests
-
-### Web Tests (TechCrunch)
-
-```bash
-# Chrome (default)
+# Web tests (TechCrunch)
 npm run test:web
 
-# Firefox
-npm run cy:run:firefox
+# Web tests (headed Chrome)
+npm run test:web:headed
 
-# Interactive mode
+# Cypress interactive mode
 npm run cy:open
-```
 
-### Mobile Tests (Hepsiburada)
+# Mobile - SauceLabs demo app
+APP_PATH=<path-to-apk> npm run mobile:saucelabs
 
-Before running, ensure:
-
-1. Android Emulator is running (`emulator -list-avds` / Android Studio)
-2. Hepsiburada APK is downloaded from `https://apkpure.com/hepsiburada-online-shopping/com.pozitron.hepsiburada/download` (use the 64-bit variant)
-3. Place APK at `./apk/hepsiburada.apk` (or pass `APP_PATH=/your/path/app.apk`)
-
-```bash
+# Mobile - Hepsiburada (automated Appium setup)
 npm run test:mobile
-```
 
-`npm run test:mobile` calls `npm run mobile:run`, which uses `scripts/run-mobile.js`.
-This script automatically:
-
-1. checks connected devices with `adb devices`
-2. installs APK from `APP_PATH` if file exists (default: `./apk/hepsiburada.apk`)
-3. if APK file is missing, checks whether `APP_PACKAGE` is already installed
-4. checks/starts Appium (`npx appium`) if needed
-5. runs the WDIO suite (`mobile:run:core`)
-
-Example with custom APK path:
-
-```bash
-APP_PATH="/Users/<your-user>/Downloads/hepsiburada-64.apk" npm run test:mobile
-```
-
-### All Tests
-
-```bash
+# All web + mobile
 npm run test:all
 ```
 
-## Formatting and Hooks
+### Configuration (Hepsiburada Mobile)
 
-Prettier and Husky are configured in this project.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APPIUM_HOST` | `127.0.0.1` | Appium server host |
+| `APPIUM_PORT` | `4723` | Appium server port |
+| `APP_PATH` | `./apk/hepsiburada.apk` | Local APK path |
+| `APP_PACKAGE` | `com.pozitron.hepsiburada` | App package name |
+| `DEVICE_NAME` | `Android Emulator` | Target device |
+| `PLATFORM_VERSION` | `15` | Android version |
 
-### Prettier
+### Slack (optional)
 
-```bash
-# Format all supported files
-npm run format
+| Variable | Description |
+|----------|-------------|
+| `SLACK_WEBHOOK_URL` | Incoming webhook URL |
+| `SLACK_ENABLED` | `true` to enable notifications |
+| `SLACK_CHANNEL` | Target channel (e.g., `#test-results`) |
 
-# Check formatting without changing files
-npm run format:check
-```
-
-Config files:
-
-- `.prettierrc`
-- `.prettierignore`
-
-### Husky + lint-staged
-
-- Pre-commit hook file: `.husky/pre-commit`
-- On commit, `lint-staged` runs Prettier for staged files:
-  - `*.{js,json,md,yml,yaml}`
-
----
-
-## Reports
-
-### Web (Mochawesome via cypress-mochawesome-reporter)
-
-Reports are generated automatically in `cypress/reports/mocha/` after each Cypress run.
-
-To merge and generate a single HTML report:
+### Formatting
 
 ```bash
-npm run report:merge
-npm run report:generate
+npm run format          # Format all files
+npm run format:check    # Check formatting
 ```
 
-The final report will be at `cypress/reports/html/report.html`.
+Prettier + Husky pre-commit hook configured (`.prettierrc`, `.husky/pre-commit`).
 
-### Mobile (Mochawesome via wdio-mochawesome-reporter)
+### Reports
 
-Reports are generated automatically in `mobile/reports/` after each WebdriverIO run.
+- **Web/API:** `cypress/reports/mocha/` (auto-generated HTML)
+- **Mobile:** `mobile/reports/` (auto-generated HTML)
 
----
+### CI/CD (GitHub Actions)
 
-## CI/CD (GitHub Actions)
+Pipeline at `.github/workflows/test-pipeline.yml`:
 
-The pipeline at `.github/workflows/test-pipeline.yml` supports:
-
-| Trigger                            | Behaviour         |
-| ---------------------------------- | ----------------- |
-| Push to `main` / `develop`         | Runs web tests    |
-| Pull request to `main`             | Runs web tests    |
-| `workflow_dispatch` (suite=web)    | Runs web tests    |
+| Trigger | Behaviour |
+|---------|-----------|
+| Push to `main` / `develop` | Runs web tests |
+| Pull request to `main` | Runs web tests |
+| `workflow_dispatch` (suite=web) | Runs web tests |
 | `workflow_dispatch` (suite=mobile) | Runs mobile tests |
-| `workflow_dispatch` (suite=all)    | Runs both         |
-
-Add the following GitHub secrets to enable Slack notifications from CI:
-
-- `SLACK_WEBHOOK_URL`
-- `SLACK_ENABLED` = `true`
-- `SLACK_CHANNEL` = `#test-results`
-
----
-
-## Case 1 – Test Cases
-
-See `case1-test-cases.md` for 44 test cases covering the Crown Spa contact form, including positive and negative scenarios.
+| `workflow_dispatch` (suite=all) | Runs both |
