@@ -47,13 +47,25 @@ npm run test:api
 
 **Run:**
 
-1. Start Appium:
+1. Start Android Emulator:
+
+```bash
+emulator -avd <avd-name>
+```
+
+Verify device is connected:
+
+```bash
+adb devices
+```
+
+2. Start Appium:
 
 ```bash
 npx appium
 ```
 
-2. Run the test:
+3. Run the test:
 
 ```bash
 APP_PATH=<path-to-apk> npm run mobile:saucelabs
@@ -63,6 +75,12 @@ Example:
 
 ```bash
 APP_PATH=~/Desktop/mda-androidTest-2.2.0-25.apk npm run mobile:saucelabs
+```
+
+If multiple emulators are running, specify the device:
+
+```bash
+APP_PATH=~/Desktop/mda-androidTest-2.2.0-25.apk DEVICE_NAME=emulator-5556 npm run mobile:saucelabs
 ```
 
 **Report:** `mobile/reports/` (HTML)
